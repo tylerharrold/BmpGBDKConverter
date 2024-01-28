@@ -1,4 +1,5 @@
-﻿namespace BmpGBDKConverter
+﻿
+namespace BmpGBDKConverter
 {
     partial class frm1
     {
@@ -56,7 +57,7 @@
             btnSelectFile.TabIndex = 0;
             btnSelectFile.Text = "Select File";
             btnSelectFile.UseVisualStyleBackColor = true;
-            btnSelectFile.Click += button1_Click;
+            btnSelectFile.Click += btnSelectFile_Click;
             // 
             // textBox1
             // 
@@ -94,7 +95,6 @@
             lblWhiteColor.Size = new Size(81, 15);
             lblWhiteColor.TabIndex = 5;
             lblWhiteColor.Text = "Lightest Color";
-            lblWhiteColor.Click += label1_Click;
             // 
             // lblLightGrey
             // 
@@ -185,6 +185,7 @@
             btnConvert.TabIndex = 15;
             btnConvert.Text = "CONVERT";
             btnConvert.UseVisualStyleBackColor = true;
+            btnConvert.Click += btnConvert_Click;
             // 
             // frm1
             // 
