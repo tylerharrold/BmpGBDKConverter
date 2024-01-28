@@ -10,7 +10,8 @@ namespace BmpGBDKConverter
         const int BYTES_PER_PIXEL = 4; // this theorectically is not constant depending on bmp depth, but its probably const for me
         const int LSB = 0;
         const int MSB = 1;
-        const int TILE_ROWS = 8;
+        const int TILE_ROWS = 8; 
+        const int BYTES_PER_ROW_MAP = 2;
 
         string loadFilePath = "";
 
@@ -75,38 +76,49 @@ namespace BmpGBDKConverter
             }
         }
 
-        private void ProcessImportedBytes(byte[] bytes)
+        private void ProcessImportedBytes()
         {
             // read in pixel data offset
-            int pixelOffset = bytes[10];
+            int pixelOffset = bmpBytes[10];
             // read in bitmap width/height
-            pixelWidth = bytes[18];
-            pixelHeight = bytes[22];
+            pixelWidth = bmpBytes[18];
+            pixelHeight = bmpBytes[22];
 
+            // setup the mapped byte array
+            // we have two bytes per tile row, 8 rows per tile, tile_rows , tile_height
+            convertedByteData = new byte[2 * TILE_ROWS * tileMapColumns * tileMapRows];
+
+            int ROW_TILE_OFFSET = BYTES_PER_PIXEL * PIXELS_PER_TILE_ROW; 
+            
             int tilesConverted = 0;
-            for(int rows = 0; rows < tileMapRows; rows++)
+            bool finished = false;
+            for(int rows = pixelOffset; rows < bmpBytes.Length; rows+= (pixelWidth * BYTES_PER_PIXEL * TILE_ROWS))
             {
-                for(int cols = 0; cols < tileMapColumns; cols++)
+                int colStartOffset = rows;
+                for(int cols = colStartOffset; cols < (colStartOffset + (ROW_TILE_OFFSET * TILE_ROWS)); cols += ROW_TILE_OFFSET)
                 {
 
+                    MapTileByRow(bmpBytes, convertedByteData, cols, tilesConverted);
+                    tilesConverted+= BYTES_PER_ROW_MAP * TILE_ROWS;
                     
-                    tilesConverted++;
-                    // check to see if the loops need breaking
-                    if(tilesConverted >= tilesInTileMap)
+                    // NEED TO CHANGE THIS THIS DOESN'T WORK ANYMORE
+                    if(tilesConverted > convertedByteData.Length)
                     {
-                        cols = tileMapColumns;
-                        rows = tileMapRows;
+                        finished = true;
+                        if (finished) break;
                     }
                 }
+
+                if (finished) break;
             }
         }
         
-        // mappedValues is slice
-        private void MapTileByRow(byte[] pixelBytes , byte[] mappedValues , int tileStartIndex)
+        // mappedValues NEEDS TO BE SLICED HERE
+        private void MapTileByRow(byte[] pixelBytes , byte[] mappedValues , int tileStartIndex , int mapStartIndex)
         {
-            for(int row = tileStartIndex; row < (row + (pixelWidth * BYTES_PER_PIXEL * TILE_ROWS)); row = (row + pixelWidth * BYTES_PER_PIXEL))
+            for(int row = tileStartIndex , mapIndex = mapStartIndex; row < (tileStartIndex + (pixelWidth * BYTES_PER_PIXEL * TILE_ROWS)); row += (pixelWidth * BYTES_PER_PIXEL) , mapIndex+= BYTES_PER_ROW_MAP)
             {
-                MapPixelRow(pixelBytes[row..(row + PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL)] , mappedValues);
+                MapPixelRow(pixelBytes[row..(row + PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL)] , mappedValues[mapIndex..(mapIndex + BYTES_PER_ROW_MAP)]);
             }
         }
 
