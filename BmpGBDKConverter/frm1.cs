@@ -22,6 +22,10 @@ namespace BmpGBDKConverter
         const uint midHighColor = 0xff1e594a;
         const uint darkColor = 0xff00131a;
 
+        int pixelWidth;
+        int pixelHeight;
+
+
         // byte array read from file
         byte[] bmpBytes;
         ByteHolder[] convertedByteData;
