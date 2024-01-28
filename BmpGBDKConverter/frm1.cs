@@ -12,7 +12,6 @@ namespace BmpGBDKConverter
         const int LSB = 0;
         const int MSB = 1;
         const int TILE_ROWS = 8;
-        const int BYTES_PER_ROW_MAP = 2;
 
         string loadFilePath = "";
 
@@ -23,8 +22,11 @@ namespace BmpGBDKConverter
         const uint darkColor = 0xff00131a;
 
         int pixelWidth;
-        int pixelHeight;
 
+
+        // THESE HARDCODED VALUES SHOULD BE FIGURED BY DATA
+        int tileMapRows = 2;
+        int tileMapColumns = 8;
 
         // byte array read from file
         byte[] bmpBytes;
@@ -32,10 +34,11 @@ namespace BmpGBDKConverter
 
         private class ByteHolder
         {
-            public byte byteData;
+            public byte msbData;
+            public byte lsbData;
             public ByteHolder()
             {
-                byteData = 0;
+                msbData = lsbData = 0;
             }
         }
 
@@ -90,11 +93,10 @@ namespace BmpGBDKConverter
             int pixelOffset = bmpBytes[10];
             // read in bitmap width/height
             pixelWidth = bmpBytes[18];
-            pixelHeight = bmpBytes[22];
 
             // setup the mapped byte array
             // we have two bytes per tile row, 8 rows per tile, tile_rows , tile_height
-            convertedByteData = new ByteHolder[2 * TILE_ROWS * tileMapColumns * tileMapRows];
+            convertedByteData = new ByteHolder[TILE_ROWS * tileMapColumns * tileMapRows];
             for(int i = 0; i < convertedByteData.Length; i++)
             {
                 convertedByteData[i] = new ByteHolder();
@@ -111,33 +113,25 @@ namespace BmpGBDKConverter
                 {
 
                     MapTileByRow(bmpBytes, convertedByteData, cols, tilesConverted);
-                    tilesConverted += BYTES_PER_ROW_MAP * TILE_ROWS;
+                    tilesConverted += TILE_ROWS;
 
-                    // NEED TO CHANGE THIS THIS DOESN'T WORK ANYMORE
-                    if (tilesConverted > convertedByteData.Length)
-                    {
-                        finished = true;
-                        if (finished) break;
-                    }
                 }
 
-                if (finished) break;
             }
         }
 
         // mappedValues NEEDS TO BE SLICED HERE
         private void MapTileByRow(byte[] pixelBytes, ByteHolder[] mappedValues, int tileStartIndex, int mapStartIndex)
         {
-            for (int row = tileStartIndex, mapIndex = mapStartIndex; row < (tileStartIndex + (pixelWidth * BYTES_PER_PIXEL * TILE_ROWS)); row += (pixelWidth * BYTES_PER_PIXEL), mapIndex += BYTES_PER_ROW_MAP)
+            for (int row = tileStartIndex, mapIndex = mapStartIndex; row < (tileStartIndex + (pixelWidth * BYTES_PER_PIXEL * TILE_ROWS)); row += (pixelWidth * BYTES_PER_PIXEL), mapIndex ++)
             {
-                MapPixelRow(pixelBytes[row..(row + PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL)], mappedValues[mapIndex..(mapIndex + BYTES_PER_ROW_MAP)]);
+                MapPixelRow(pixelBytes[row..(row + PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL)], mappedValues[mapIndex]);
             }
         }
 
-        private void MapPixelRow(byte[] pixelBytes, ByteHolder[] mappedValues)
+        private void MapPixelRow(byte[] pixelBytes, ByteHolder rowBytes)
         {
             Debug.Assert(pixelBytes.Length == (PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL));
-            Debug.Assert(mappedValues.Length == 2);
 
             for (int i = 0; i < (PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL); i = i + BYTES_PER_PIXEL)
             {
@@ -148,14 +142,14 @@ namespace BmpGBDKConverter
                     case (lightColor):
                         break;
                     case midLightColor:
-                        mappedValues[LSB].byteData = MarkPixelValueAtIndex(mappedValues[LSB].byteData, pixelIndexForByte);
+                        rowBytes.lsbData = MarkPixelValueAtIndex(rowBytes.lsbData, pixelIndexForByte);
                         break;
                     case midHighColor:
-                        mappedValues[MSB].byteData = MarkPixelValueAtIndex(mappedValues[MSB].byteData, pixelIndexForByte);
+                        rowBytes.msbData = MarkPixelValueAtIndex(rowBytes.msbData, pixelIndexForByte);
                         break;
                     case darkColor:
-                        mappedValues[LSB].byteData = MarkPixelValueAtIndex(mappedValues[LSB].byteData, pixelIndexForByte);
-                        mappedValues[MSB].byteData = MarkPixelValueAtIndex(mappedValues[MSB].byteData, pixelIndexForByte);
+                        rowBytes.lsbData = MarkPixelValueAtIndex(rowBytes.lsbData, pixelIndexForByte);
+                        rowBytes.msbData = MarkPixelValueAtIndex(rowBytes.msbData, pixelIndexForByte);
                         break;
                     default:
                         break;
@@ -209,12 +203,15 @@ namespace BmpGBDKConverter
             {
                 using (StreamWriter writer = new StreamWriter(filePath))
                 {
-                    /*
+                    
                     int bytesWritten = 0;
                     foreach (ByteHolder b in convertedByteData)
                     {
                         writer.Write("0x");
-                        writer.Write(b.byteData.ToString("X2"));
+                        writer.Write(b.lsbData.ToString("X2"));
+                        writer.Write(",");
+                        writer.Write("0x");
+                        writer.Write(b.msbData.ToString("X2"));
                         writer.Write(",");
                         bytesWritten++;
                         if (bytesWritten > 7)
@@ -223,7 +220,7 @@ namespace BmpGBDKConverter
                             bytesWritten = 0;
                         }
                     }
-                    */
+                    
                 }
 
                 MessageBox.Show("Maybe worked?");
