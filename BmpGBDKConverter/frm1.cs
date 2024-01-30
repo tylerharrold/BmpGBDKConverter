@@ -19,8 +19,6 @@ namespace BmpGBDKConverter
         // constants
         const int PIXELS_PER_TILE_ROW = 8;
         const int BYTES_PER_PIXEL = 4; // this theorectically is not constant depending on bmp depth, but its probably const for me
-        const int LSB = 0;
-        const int MSB = 1;
         const int TILE_ROWS = 8;
 
         string loadFilePath = "";
@@ -31,6 +29,8 @@ namespace BmpGBDKConverter
         const uint midHighColor = 0xff1e594a;
         const uint darkColor = 0xff00131a;
 
+        // bmp header data
+        int pixelDataOffset;
         int pixelWidth;
         int pixelHeight;
 
@@ -41,8 +41,11 @@ namespace BmpGBDKConverter
 
         // byte array read from file
         byte[] bmpBytes;
-        ByteHolder[] convertedByteData;
 
+
+        //ByteHolder[] convertedByteData;
+
+        /*
         private class ByteHolder
         {
             public byte msbData;
@@ -52,6 +55,7 @@ namespace BmpGBDKConverter
                 msbData = lsbData = 0;
             }
         }
+        */
 
 
         public frm1()
@@ -63,15 +67,6 @@ namespace BmpGBDKConverter
 
         private void btnConvert_Click(object sender, EventArgs e)
         {
-            // validate inputs
-
-            // convert specified color values to numeric values?
-
-            // get the file to convert into a byte array
-
-            // read the byte array using the values and conver it to a .cpp and .h file 
-            // of the type that can be easily used in G
-
 
             throw new NotImplementedException();
         }
@@ -85,16 +80,11 @@ namespace BmpGBDKConverter
                 try
                 {
                     bmpBytes = File.ReadAllBytes(loadFilePath);
-                    // refactor here, this is testing
-                    //ProcessImportedBytes();
-                    //WriteMappedBytes();
-
+                    ProcessBMPHeader(bmpBytes);
                     uint[] pixels = TranslateBytesToPixels(bmpBytes);
                     SetUpTileArray();
                     ProcessPixels(pixels);
-                    WriteMappedBytesAlternate();
-
-
+                    WriteMappedBytes();
 
                 }
                 catch (Exception ex)
@@ -104,6 +94,7 @@ namespace BmpGBDKConverter
             }
         }
 
+        /*
         private void ProcessImportedBytes()
         {
             // read in pixel data offset
@@ -136,7 +127,8 @@ namespace BmpGBDKConverter
 
             }
         }
-
+        */
+        /*
         // mappedValues NEEDS TO BE SLICED HERE
         private void MapTileByRow(byte[] pixelBytes, ByteHolder[] mappedValues, int tileStartIndex, int mapStartIndex)
         {
@@ -145,7 +137,8 @@ namespace BmpGBDKConverter
                 MapPixelRow(pixelBytes[row..(row + PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL)], mappedValues[mapIndex]);
             }
         }
-
+        */
+        /*
         private void MapPixelRow(byte[] pixelBytes, ByteHolder rowBytes)
         {
             Debug.Assert(pixelBytes.Length == (PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL));
@@ -172,6 +165,14 @@ namespace BmpGBDKConverter
                         break;
                 }
             }
+        }
+        */
+        
+        private void ProcessBMPHeader(byte[] readBytes)
+        {
+            pixelDataOffset = bmpBytes[BMP_IMAGE_DATA_OFFSET];
+            pixelWidth = bmpBytes[BMP_PIXEL_WIDTH_VALUE_OFFSET];
+            pixelHeight = bmpBytes[BMP_PIXEL_HEIGHT_VALUE_OFFSET];
         }
 
         private uint DeterminePixelColor(byte[] pixelBytes)
@@ -200,7 +201,8 @@ namespace BmpGBDKConverter
                     return lightColor;
             }
         }
-
+      
+        /*
         private byte MarkPixelValueAtIndex(byte rowByte, int index)
         {
             byte indexByte = 1;
@@ -211,7 +213,8 @@ namespace BmpGBDKConverter
             return rowByte;
 
         }
-
+        */
+        /*
         private void WriteMappedBytes()
         {
             string filePath = "testoutput.txt";
@@ -220,24 +223,7 @@ namespace BmpGBDKConverter
             {
                 using (StreamWriter writer = new StreamWriter(filePath))
                 {
-                    /*
-                    int bytesWritten = 0;
-                    foreach (ByteHolder b in convertedByteData)
-                    {
-                        writer.Write("0x");
-                        writer.Write(b.lsbData.ToString("X2"));
-                        writer.Write(",");
-                        writer.Write("0x");
-                        writer.Write(b.msbData.ToString("X2"));
-                        writer.Write(",");
-                        bytesWritten++;
-                        if (bytesWritten > 7)
-                        {
-                            writer.Write("\n");
-                            bytesWritten = 0;
-                        }
-                    }
-                    */
+                 
                     for (int i = 0; i < convertedByteData.Length; i += TILE_ROWS)
                     {
                         for (int j = TILE_ROWS - 1; j >= 0; j--)
@@ -264,21 +250,18 @@ namespace BmpGBDKConverter
                 MessageBox.Show($"Something went VERY wrong {ex.Message}");
             }
         }
+        */
 
         // we need a different way
 
         // method that starts at data offset and reads in full list of pixels
         private uint[] TranslateBytesToPixels(byte[] bmpBytes)
         {
-
-            int pixelOffset = bmpBytes[BMP_IMAGE_DATA_OFFSET];
-            pixelWidth = bmpBytes[BMP_PIXEL_WIDTH_VALUE_OFFSET];
-            pixelHeight = bmpBytes[BMP_PIXEL_HEIGHT_VALUE_OFFSET];
-            int pixelDataEndIndex = pixelOffset + (pixelWidth * pixelHeight * BYTES_PER_PIXEL);
+            int pixelDataEndIndex = pixelDataOffset + (pixelWidth * pixelHeight * BYTES_PER_PIXEL);
 
             uint[] pixels = new uint[pixelWidth * pixelHeight];
 
-            for (int i = pixelOffset, j = 0; i < pixelDataEndIndex; i += BYTES_PER_PIXEL, j++)
+            for (int i = pixelDataOffset, j = 0; i < pixelDataEndIndex; i += BYTES_PER_PIXEL, j++)
             {
                 pixels[j] = DeterminePixelColor(bmpBytes[i..(i + BYTES_PER_PIXEL)]);
             }
@@ -346,7 +329,7 @@ namespace BmpGBDKConverter
             }
         }
 
-        private void WriteMappedBytesAlternate()
+        private void WriteMappedBytes()
         {
             string filePath = "testoutput.txt";
 
@@ -354,24 +337,6 @@ namespace BmpGBDKConverter
             {
                 using (StreamWriter writer = new StreamWriter(filePath))
                 {
-                    /*
-                    int bytesWritten = 0;
-                    foreach (ByteHolder b in convertedByteData)
-                    {
-                        writer.Write("0x");
-                        writer.Write(b.lsbData.ToString("X2"));
-                        writer.Write(",");
-                        writer.Write("0x");
-                        writer.Write(b.msbData.ToString("X2"));
-                        writer.Write(",");
-                        bytesWritten++;
-                        if (bytesWritten > 7)
-                        {
-                            writer.Write("\n");
-                            bytesWritten = 0;
-                        }
-                    }
-                    */
                     for(int row = 1; row >= 0; row--)
                     {
                         for (int col = 0; col < (pixelWidth / GBTile.TILE_PIXEL_WIDTH); col++)
@@ -380,12 +345,8 @@ namespace BmpGBDKConverter
                             writer.WriteLine(strToWrite);
                         }
                     }
-
                 }
-
-
-
-                MessageBox.Show("Maybe worked?");
+                MessageBox.Show("Successfully converted BMP");
             }
             catch (Exception ex)
             {
