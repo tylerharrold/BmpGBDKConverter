@@ -80,6 +80,7 @@ namespace BmpGBDKConverter
                 try
                 {
                     bmpBytes = File.ReadAllBytes(loadFilePath);
+                    bool isValidBMP = ValidateBMP(bmpBytes);
                     ProcessBMPHeader(bmpBytes);
                     uint[] pixels = TranslateBytesToPixels(bmpBytes);
                     SetUpTileArray();
@@ -167,6 +168,19 @@ namespace BmpGBDKConverter
             }
         }
         */
+
+        private bool ValidateBMP(byte[] bmpBytes)
+        {
+            // if the first two bytes are not char 'B' 'M' we aren't reading the correct format of file
+            char b = (char)bmpBytes[0];
+            char m = (char)bmpBytes[1];
+            if (b != 'B' && b != 'M') return false;
+
+            // if there is padding in this BMP none of the processing will work properly
+            // TODO
+
+            return true;
+        }
         
         private void ProcessBMPHeader(byte[] readBytes)
         {
@@ -275,6 +289,9 @@ namespace BmpGBDKConverter
             int tilesInRow = pixelWidth / GBTile.TILE_PIXEL_WIDTH;
             int tilesInCol = pixelHeight / GBTile.TILE_PIXEL_HEIGHT;
 
+
+            // the logic setting this up is wrong, and i think i inverted some of the subsequent logic to 
+            // make up for that
             tiles = new GBTile[tilesInRow, tilesInCol];
             for (int i = 0; i < tilesInRow; i++)
             {
