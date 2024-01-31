@@ -11,7 +11,7 @@ namespace BmpGBDKConverter
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Application.Run(new frm1());
+            Application.Run(new ImportBMPForm());
         }
     }
 }
