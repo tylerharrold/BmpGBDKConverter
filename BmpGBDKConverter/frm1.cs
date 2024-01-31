@@ -42,22 +42,6 @@ namespace BmpGBDKConverter
         // byte array read from file
         byte[] bmpBytes;
 
-
-        //ByteHolder[] convertedByteData;
-
-        /*
-        private class ByteHolder
-        {
-            public byte msbData;
-            public byte lsbData;
-            public ByteHolder()
-            {
-                msbData = lsbData = 0;
-            }
-        }
-        */
-
-
         public frm1()
         {
             InitializeComponent();
@@ -94,80 +78,6 @@ namespace BmpGBDKConverter
                 }
             }
         }
-
-        /*
-        private void ProcessImportedBytes()
-        {
-            // read in pixel data offset
-            int pixelOffset = bmpBytes[10];
-            // read in bitmap width/height
-            pixelWidth = bmpBytes[18];
-
-            // setup the mapped byte array
-            // we have two bytes per tile row, 8 rows per tile, tile_rows , tile_height
-            convertedByteData = new ByteHolder[TILE_ROWS * tileMapColumns * tileMapRows];
-            for (int i = 0; i < convertedByteData.Length; i++)
-            {
-                convertedByteData[i] = new ByteHolder();
-            }
-
-            int ROW_TILE_OFFSET = BYTES_PER_PIXEL * PIXELS_PER_TILE_ROW;
-
-            int tilesConverted = 0;
-            bool finished = false;
-            for (int rows = pixelOffset; rows < bmpBytes.Length; rows += (pixelWidth * BYTES_PER_PIXEL * TILE_ROWS))
-            {
-                int colStartOffset = rows;
-                for (int cols = colStartOffset; cols < (colStartOffset + (ROW_TILE_OFFSET * TILE_ROWS)); cols += ROW_TILE_OFFSET)
-                {
-
-                    MapTileByRow(bmpBytes, convertedByteData, cols, tilesConverted);
-                    tilesConverted += TILE_ROWS;
-
-                }
-
-            }
-        }
-        */
-        /*
-        // mappedValues NEEDS TO BE SLICED HERE
-        private void MapTileByRow(byte[] pixelBytes, ByteHolder[] mappedValues, int tileStartIndex, int mapStartIndex)
-        {
-            for (int row = tileStartIndex, mapIndex = mapStartIndex; row < (tileStartIndex + (pixelWidth * BYTES_PER_PIXEL * TILE_ROWS)); row += (pixelWidth * BYTES_PER_PIXEL), mapIndex++)
-            {
-                MapPixelRow(pixelBytes[row..(row + PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL)], mappedValues[mapIndex]);
-            }
-        }
-        */
-        /*
-        private void MapPixelRow(byte[] pixelBytes, ByteHolder rowBytes)
-        {
-            Debug.Assert(pixelBytes.Length == (PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL));
-
-            for (int i = 0; i < (PIXELS_PER_TILE_ROW * BYTES_PER_PIXEL); i = i + BYTES_PER_PIXEL)
-            {
-                uint colorValue = DeterminePixelColor(pixelBytes[i..(i + BYTES_PER_PIXEL)]);
-                int pixelIndexForByte = i / 4;
-                switch (colorValue)
-                {
-                    case (lightColor):
-                        break;
-                    case midLightColor:
-                        rowBytes.lsbData = MarkPixelValueAtIndex(rowBytes.lsbData, pixelIndexForByte);
-                        break;
-                    case midHighColor:
-                        rowBytes.msbData = MarkPixelValueAtIndex(rowBytes.msbData, pixelIndexForByte);
-                        break;
-                    case darkColor:
-                        rowBytes.lsbData = MarkPixelValueAtIndex(rowBytes.lsbData, pixelIndexForByte);
-                        rowBytes.msbData = MarkPixelValueAtIndex(rowBytes.msbData, pixelIndexForByte);
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-        */
 
         private bool ValidateBMP(byte[] bmpBytes)
         {
@@ -215,58 +125,6 @@ namespace BmpGBDKConverter
                     return lightColor;
             }
         }
-      
-        /*
-        private byte MarkPixelValueAtIndex(byte rowByte, int index)
-        {
-            byte indexByte = 1;
-            indexByte = (byte)(indexByte <<= index);
-
-            rowByte = (byte)(rowByte | indexByte);
-
-            return rowByte;
-
-        }
-        */
-        /*
-        private void WriteMappedBytes()
-        {
-            string filePath = "testoutput.txt";
-
-            try
-            {
-                using (StreamWriter writer = new StreamWriter(filePath))
-                {
-                 
-                    for (int i = 0; i < convertedByteData.Length; i += TILE_ROWS)
-                    {
-                        for (int j = TILE_ROWS - 1; j >= 0; j--)
-                        {
-                            int index = i + j;
-                            writer.Write("0x");
-                            writer.Write(convertedByteData[index].lsbData.ToString("X2"));
-                            writer.Write(",");
-                            writer.Write("0x");
-                            writer.Write(convertedByteData[index].msbData.ToString("X2"));
-                            writer.Write(",");
-                        }
-                        writer.Write("\n");
-                    }
-
-                }
-
-
-
-                MessageBox.Show("Maybe worked?");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Something went VERY wrong {ex.Message}");
-            }
-        }
-        */
-
-        // we need a different way
 
         // method that starts at data offset and reads in full list of pixels
         private uint[] TranslateBytesToPixels(byte[] bmpBytes)
