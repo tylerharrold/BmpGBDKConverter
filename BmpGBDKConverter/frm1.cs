@@ -35,9 +35,10 @@ namespace BmpGBDKConverter
         int bmpPixelHeight;
 
 
-        // THESE HARDCODED VALUES SHOULD BE FIGURED BY DATA
-        int tileMapRows = 2;
-        int tileMapColumns = 8;
+        // Tile relevant data
+        int totalTiles;
+        int numColumns;
+        int numRows;
 
         // byte array read from file
         byte[] bmpBytes;
@@ -143,9 +144,9 @@ namespace BmpGBDKConverter
 
         private void SetUpTileArray()
         {
-            int totalTiles = (bmpPixelHeight * bmpPixelWidth) / (GBTile.TILE_PIXEL_WIDTH * GBTile.TILE_PIXEL_HEIGHT);
-            int numColumns = bmpPixelWidth / GBTile.TILE_PIXEL_WIDTH;
-            int numRows = bmpPixelHeight / GBTile.TILE_PIXEL_HEIGHT;
+            totalTiles = (bmpPixelHeight * bmpPixelWidth) / (GBTile.TILE_PIXEL_WIDTH * GBTile.TILE_PIXEL_HEIGHT);
+            numColumns = bmpPixelWidth / GBTile.TILE_PIXEL_WIDTH;
+            numRows = bmpPixelHeight / GBTile.TILE_PIXEL_HEIGHT;
 
             tiles = new GBTile[numRows, numColumns];
             for (int r = 0; r < numRows; r++)
@@ -209,11 +210,11 @@ namespace BmpGBDKConverter
             {
                 using (StreamWriter writer = new StreamWriter(filePath))
                 {
-                    for(int row = 1; row >= 0; row--)
+                    for(int row = numRows - 1; row >= 0; row--)
                     {
-                        for (int col = 0; col < (bmpPixelWidth / GBTile.TILE_PIXEL_WIDTH); col++)
+                        for (int col = 0; col < (numColumns); col++)
                         {
-                            string strToWrite = tiles[col, row].GetStringValues();
+                            string strToWrite = tiles[row, col].GetStringValues();
                             writer.WriteLine(strToWrite);
                         }
                     }

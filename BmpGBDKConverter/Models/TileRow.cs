@@ -26,7 +26,7 @@ namespace BmpGBDKConverter.Models
         public string GetRowHexValuesAsString()
         {
 
-            return "0x" + LsByte.ToString("X2") + "," + "0x" + MsByte.ToString() + ",";
+            return "0x" + LsByte.ToString("X2") + "," + "0x" + MsByte.ToString("X2") + ",";
         }
 
         public void MarkPixel(ColorValue cv , int indexInRow)
