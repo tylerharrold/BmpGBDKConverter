@@ -31,8 +31,8 @@ namespace BmpGBDKConverter
 
         // bmp header data
         int pixelDataOffset;
-        int pixelWidth;
-        int pixelHeight;
+        int bmpPixelWidth;
+        int bmpPixelHeight;
 
 
         // THESE HARDCODED VALUES SHOULD BE FIGURED BY DATA
@@ -95,8 +95,8 @@ namespace BmpGBDKConverter
         private void ProcessBMPHeader(byte[] readBytes)
         {
             pixelDataOffset = bmpBytes[BMP_IMAGE_DATA_OFFSET];
-            pixelWidth = bmpBytes[BMP_PIXEL_WIDTH_VALUE_OFFSET];
-            pixelHeight = bmpBytes[BMP_PIXEL_HEIGHT_VALUE_OFFSET];
+            bmpPixelWidth = bmpBytes[BMP_PIXEL_WIDTH_VALUE_OFFSET];
+            bmpPixelHeight = bmpBytes[BMP_PIXEL_HEIGHT_VALUE_OFFSET];
         }
 
         private uint DeterminePixelColor(byte[] pixelBytes)
@@ -129,9 +129,9 @@ namespace BmpGBDKConverter
         // method that starts at data offset and reads in full list of pixels
         private uint[] TranslateBytesToPixels(byte[] bmpBytes)
         {
-            int pixelDataEndIndex = pixelDataOffset + (pixelWidth * pixelHeight * BYTES_PER_PIXEL);
+            int pixelDataEndIndex = pixelDataOffset + (bmpPixelWidth * bmpPixelHeight * BYTES_PER_PIXEL);
 
-            uint[] pixels = new uint[pixelWidth * pixelHeight];
+            uint[] pixels = new uint[bmpPixelWidth * bmpPixelHeight];
 
             for (int i = pixelDataOffset, j = 0; i < pixelDataEndIndex; i += BYTES_PER_PIXEL, j++)
             {
@@ -143,19 +143,16 @@ namespace BmpGBDKConverter
 
         private void SetUpTileArray()
         {
-            int totalTiles = (pixelHeight * pixelWidth) / (GBTile.TILE_PIXEL_WIDTH * GBTile.TILE_PIXEL_HEIGHT);
-            int tilesInRow = pixelWidth / GBTile.TILE_PIXEL_WIDTH;
-            int tilesInCol = pixelHeight / GBTile.TILE_PIXEL_HEIGHT;
+            int totalTiles = (bmpPixelHeight * bmpPixelWidth) / (GBTile.TILE_PIXEL_WIDTH * GBTile.TILE_PIXEL_HEIGHT);
+            int numColumns = bmpPixelWidth / GBTile.TILE_PIXEL_WIDTH;
+            int numRows = bmpPixelHeight / GBTile.TILE_PIXEL_HEIGHT;
 
-
-            // the logic setting this up is wrong, and i think i inverted some of the subsequent logic to 
-            // make up for that
-            tiles = new GBTile[tilesInRow, tilesInCol];
-            for (int i = 0; i < tilesInRow; i++)
+            tiles = new GBTile[numRows, numColumns];
+            for (int r = 0; r < numRows; r++)
             {
-                for (int j = 0; j < tilesInCol; j++)
+                for (int c = 0; c < numColumns; c++)
                 {
-                    tiles[i, j] = new GBTile();
+                    tiles[r, c] = new GBTile();
                 }
             }
         }
@@ -163,15 +160,15 @@ namespace BmpGBDKConverter
         private void ProcessPixels(uint[] pixelData)
         {
 
-            for (int rowStart = 0; rowStart < (pixelWidth * pixelHeight); rowStart += pixelWidth)
+            for (int rowStart = 0; rowStart < (bmpPixelWidth * bmpPixelHeight); rowStart += bmpPixelWidth)
             {
-                ProcessRow(pixelData[rowStart..(rowStart + pixelWidth)], (rowStart / (pixelWidth * TILE_ROWS)) , ((rowStart / pixelWidth) % TILE_ROWS));
+                ProcessRow(pixelData[rowStart..(rowStart + bmpPixelWidth)], (rowStart / (bmpPixelWidth * TILE_ROWS)) , ((rowStart / bmpPixelWidth) % TILE_ROWS));
             }
         }
 
         private void ProcessRow(uint[] pixelRow, int tileRow, int tilePixelRow)
         {
-            for (int pixel = 0; pixel < pixelWidth; pixel += PIXELS_PER_TILE_ROW)
+            for (int pixel = 0; pixel < bmpPixelWidth; pixel += PIXELS_PER_TILE_ROW)
             {
                 ProcessPixelRowChunk(pixelRow[pixel..(pixel + PIXELS_PER_TILE_ROW)], tiles[(pixel / PIXELS_PER_TILE_ROW) , tileRow].rows[tilePixelRow]);
             }
@@ -214,7 +211,7 @@ namespace BmpGBDKConverter
                 {
                     for(int row = 1; row >= 0; row--)
                     {
-                        for (int col = 0; col < (pixelWidth / GBTile.TILE_PIXEL_WIDTH); col++)
+                        for (int col = 0; col < (bmpPixelWidth / GBTile.TILE_PIXEL_WIDTH); col++)
                         {
                             string strToWrite = tiles[col, row].GetStringValues();
                             writer.WriteLine(strToWrite);
