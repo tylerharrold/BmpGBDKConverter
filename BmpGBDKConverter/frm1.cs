@@ -160,9 +160,9 @@ namespace BmpGBDKConverter
         private void ProcessPixels(uint[] pixelData)
         {
 
-            for (int rowStart = 0; rowStart < (bmpPixelWidth * bmpPixelHeight); rowStart += bmpPixelWidth)
+            for (int bmpRowStart = 0; bmpRowStart < (bmpPixelWidth * bmpPixelHeight); bmpRowStart += bmpPixelWidth)
             {
-                ProcessRow(pixelData[rowStart..(rowStart + bmpPixelWidth)], (rowStart / (bmpPixelWidth * TILE_ROWS)) , ((rowStart / bmpPixelWidth) % TILE_ROWS));
+                ProcessRow(pixelData[bmpRowStart..(bmpRowStart + bmpPixelWidth)], (bmpRowStart / (bmpPixelWidth * TILE_ROWS)) , ((bmpRowStart / bmpPixelWidth) % TILE_ROWS));
             }
         }
 
@@ -170,7 +170,7 @@ namespace BmpGBDKConverter
         {
             for (int pixel = 0; pixel < bmpPixelWidth; pixel += PIXELS_PER_TILE_ROW)
             {
-                ProcessPixelRowChunk(pixelRow[pixel..(pixel + PIXELS_PER_TILE_ROW)], tiles[(pixel / PIXELS_PER_TILE_ROW) , tileRow].rows[tilePixelRow]);
+                ProcessPixelRowChunk(pixelRow[pixel..(pixel + PIXELS_PER_TILE_ROW)], tiles[tileRow , (pixel / PIXELS_PER_TILE_ROW)].rows[tilePixelRow]);
             }
         }
 
